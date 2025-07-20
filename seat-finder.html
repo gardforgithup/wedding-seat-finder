@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Wedding Seat Finder</title>
   <style>
     body {
@@ -39,43 +39,46 @@
       margin-top: 2em;
       font-size: 1.2em;
     }
-    @media screen and (max-width: 600px) {
-      input[type="text"] {
-        width: 80%;
-      }
-    }
   </style>
 </head>
 <body>
   <h1>Welcome to Our Wedding 🌸</h1>
   <div class="seat-form">
     <p>Enter your name to find your seat:</p>
-    <input type="text" id="guestName" list="guestNames" placeholder="e.g., Jane Smith">
+    <input type="text" id="guestName" list="guestNames" placeholder="e.g., Gard" />
     <datalist id="guestNames"></datalist>
     <button onclick="findSeat()">Find My Seat</button>
   </div>
   <div class="result" id="seatResult"></div>
 
   <script>
-    let seatAssignments = {};
+    const seatAssignments = {};
+    const endpoint = "https://script.google.com/macros/s/AKfycbwJApoHQRMqqsb_SlKXivgIo8iFGZ-3ZBnV74ZExEjwIwlNFw6cEgtWKXIbksnuZ0kw/exec"; // ✅ Your live JSON URL
 
-    fetch('https://script.google.com/macros/s/AKfycbwJApoHQRMqqsb_SlKXivgIo8iFGZ-3ZBnV74ZExEjwIwlNFw6cEgtWKXIbksnuZ0kw/exec')
-      .then(response => response.json())
+    fetch(endpoint)
+      .then(res => res.json())
       .then(data => {
-        data.forEach(guest => {
-          if (guest.Name && guest.Seat) {
-            seatAssignments[guest.Name.trim()] = guest.Seat;
+        data.forEach(row => {
+          const name = row.Name?.toString().trim();
+          const seat = row.Seat?.toString().trim();
+          if (name && seat) {
+            seatAssignments[name] = seat;
             const option = document.createElement("option");
-            option.value = guest.Name;
+            option.value = name;
             document.getElementById("guestNames").appendChild(option);
           }
         });
+      })
+      .catch(err => {
+        document.getElementById("seatResult").textContent = "Error loading guest list.";
+        console.error("Fetch error:", err);
       });
 
     function findSeat() {
-      const name = document.getElementById("guestName").value.trim();
-      const seat = seatAssignments[name] || "Seat not found. Please check spelling or contact event staff.";
-      document.getElementById("seatResult").textContent = seat;
+      const nameInput = document.getElementById("guestName").value.trim();
+      const result = seatAssignments[nameInput];
+      document.getElementById("seatResult").textContent =
+        result || "Seat not found. Please check spelling or contact event staff.";
     }
   </script>
 </body>
