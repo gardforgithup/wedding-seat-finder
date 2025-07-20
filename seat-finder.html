@@ -65,15 +65,20 @@
         const datalist = document.getElementById("guestNames");
         data.forEach(row => {
           const name = row.Name?.trim();
+          const table = row.Table?.toString().trim();
           const seat = row.Seat?.toString().trim();
-          if (name && seat) {
-            seatAssignments[name] = seat;
+
+          if (name && table && seat) {
+            const formatted = `Table ${table}, Seat ${seat}`;
+            seatAssignments[name] = formatted;
+
             const option = document.createElement("option");
             option.value = name;
             datalist.appendChild(option);
           }
         });
       });
+
 
     function findSeat() {
       const inputName = document.getElementById("guestName").value.trim().toLowerCase();
