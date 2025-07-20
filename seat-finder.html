@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>Wedding Seat Finder</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
@@ -18,7 +19,7 @@
       text-align: center;
       margin-bottom: 2em;
     }
-    input[type="text"] {
+    select {
       padding: 0.5em;
       width: 250px;
       font-size: 1em;
@@ -33,6 +34,7 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
+      margin-left: 1em;
     }
     .result {
       text-align: center;
@@ -44,30 +46,37 @@
 <body>
   <h1>Welcome to Our Wedding 🌸</h1>
   <div class="seat-form">
-    <p>Enter your name to find your seat:</p>
-    <input type="text" id="guestName" list="guestNames" placeholder="e.g., Gard" />
-    <datalist id="guestNames"></datalist>
+    <p>Select your name to find your seat:</p>
+    <select id="guestSelect" placeholder="Start typing your name"></select>
     <button onclick="findSeat()">Find My Seat</button>
   </div>
   <div class="result" id="seatResult"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
     const seatAssignments = {};
-    const endpoint = "https://script.google.com/macros/s/AKfycbwJApoHQRMqqsb_SlKXivgIo8iFGZ-3ZBnV74ZExEjwIwlNFw6cEgtWKXIbksnuZ0kw/exec"; // ✅ Your live JSON URL
+    const endpoint = "https://script.google.com/macros/s/AKfycbwJApoHQRMqqsb_SlKXivgIo8iFGZ-3ZBnV74ZExEjwIwlNFw6cEgtWKXIbksnuZ0kw/exec";
+
+    const choices = new Choices('#guestSelect', {
+      searchEnabled: true,
+      itemSelectText: '',
+      shouldSort: true,
+      placeholder: true
+    });
 
     fetch(endpoint)
       .then(res => res.json())
       .then(data => {
+        const guestOptions = [];
         data.forEach(row => {
           const name = row.Name?.toString().trim();
           const seat = row.Seat?.toString().trim();
           if (name && seat) {
             seatAssignments[name] = seat;
-            const option = document.createElement("option");
-            option.value = name;
-            document.getElementById("guestNames").appendChild(option);
+            guestOptions.push({ value: name, label: name });
           }
         });
+        choices.setChoices(guestOptions, 'value', 'label', true);
       })
       .catch(err => {
         document.getElementById("seatResult").textContent = "Error loading guest list.";
@@ -75,10 +84,9 @@
       });
 
     function findSeat() {
-      const nameInput = document.getElementById("guestName").value.trim();
-      const result = seatAssignments[nameInput];
-      document.getElementById("seatResult").textContent =
-        result || "Seat not found. Please check spelling or contact event staff.";
+      const selectedName = document.querySelector("#guestSelect").value.trim();
+      const seat = seatAssignments[selectedName] || "Seat not found. Please check spelling or contact event staff.";
+      document.getElementById("seatResult").textContent = seat;
     }
   </script>
 </body>
