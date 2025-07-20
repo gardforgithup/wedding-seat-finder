@@ -51,34 +51,26 @@
   <div class="seat-form">
     <p>Enter your name to find your seat:</p>
     <input type="text" id="guestName" list="guestNames" placeholder="e.g., Jane Smith">
-    <datalist id="guestNames">
-      <!-- Options will be filled by script -->
-    </datalist>
+    <datalist id="guestNames"></datalist>
     <button onclick="findSeat()">Find My Seat</button>
   </div>
   <div class="result" id="seatResult"></div>
 
-  <!-- PapaParse for CSV parsing -->
-  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
   <script>
     let seatAssignments = {};
 
-    // Published CSV link to your sheet
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIpLAeXHaVGX1oO8GuACSF1Qhw-f4gCQ_ONNmhwHFJ4eP9_3dEMDAR4wl-tC9a84cGOOFywkVXHRxx/pub?gid=0&single=true&output=csv";
-    Papa.parse(csvUrl, {
-      download: true,
-      header: true,
-      complete: function(results) {
-        results.data.forEach(row => {
-          if (row.Name && row.Seat) {
-            seatAssignments[row.Name.trim()] = row.Seat;
+    fetch('https://script.google.com/macros/s/AKfycbwJApoHQRMqqsb_SlKXivgIo8iFGZ-3ZBnV74ZExEjwIwlNFw6cEgtWKXIbksnuZ0kw/exec')
+      .then(response => response.json())
+      .then(data => {
+        data.forEach(guest => {
+          if (guest.Name && guest.Seat) {
+            seatAssignments[guest.Name.trim()] = guest.Seat;
             const option = document.createElement("option");
-            option.value = row.Name;
+            option.value = guest.Name;
             document.getElementById("guestNames").appendChild(option);
           }
         });
-      }
-    });
+      });
 
     function findSeat() {
       const name = document.getElementById("guestName").value.trim();
