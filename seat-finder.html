@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Wedding Seat Finder</title>
+  <style>
+    body {
+      font-family: 'Helvetica Neue', sans-serif;
+      background: #fefefe;
+      margin: 2em;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #8e44ad;
+    }
+    .seat-form {
+      text-align: center;
+      margin-bottom: 2em;
+    }
+    input[type="text"] {
+      padding: 0.5em;
+      width: 250px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      padding: 0.5em 1em;
+      font-size: 1em;
+      background-color: #8e44ad;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .result {
+      text-align: center;
+      margin-top: 2em;
+      font-size: 1.2em;
+    }
+    @media screen and (max-width: 600px) {
+      input[type="text"] {
+        width: 80%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Welcome to Our Wedding 🌸</h1>
+  <div class="seat-form">
+    <p>Enter your name to find your seat:</p>
+    <input type="text" id="guestName" list="guestNames" placeholder="e.g., Jane Smith">
+    <datalist id="guestNames">
+      <!-- Options will be filled by script -->
+    </datalist>
+    <button onclick="findSeat()">Find My Seat</button>
+  </div>
+  <div class="result" id="seatResult"></div>
+
+  <!-- PapaParse for CSV parsing -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+  <script>
+    let seatAssignments = {};
+
+    // Published CSV link to your sheet
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRIpLAeXHaVGX1oO8GuACSF1Qhw-f4gCQ_ONNmhwHFJ4eP9_3dEMDAR4wl-tC9a84cGOOFywkVXHRxx/pub?gid=0&single=true&output=csv";
+    Papa.parse(csvUrl, {
+      download: true,
+      header: true,
+      complete: function(results) {
+        results.data.forEach(row => {
+          if (row.Name && row.Seat) {
+            seatAssignments[row.Name.trim()] = row.Seat;
+            const option = document.createElement("option");
+            option.value = row.Name;
+            document.getElementById("guestNames").appendChild(option);
+          }
+        });
+      }
+    });
+
+    function findSeat() {
+      const name = document.getElementById("guestName").value.trim();
+      const seat = seatAssignments[name] || "Seat not found. Please check spelling or contact event staff.";
+      document.getElementById("seatResult").textContent = seat;
+    }
+  </script>
+</body>
+</html>
