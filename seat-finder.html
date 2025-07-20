@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <title>Wedding Seat Finder</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
   <style>
     body {
       font-family: 'Helvetica Neue', sans-serif;
-      background: #fdfdfd;
+      background: #fefefe;
       margin: 2em;
       color: #333;
     }
@@ -18,75 +19,78 @@
       text-align: center;
       margin-bottom: 2em;
     }
-    input[type="text"] {
-      padding: 1em;
-      width: 90%;
-      max-width: 360px;
-      font-size: 1.1em;
-      border-radius: 6px;
+    select {
+      padding: 0.5em;
+      width: 250px;
+      font-size: 1em;
+      border-radius: 5px;
       border: 1px solid #ccc;
-      margin-bottom: 1em;
     }
     button {
-      padding: 0.8em 1.4em;
-      font-size: 1.1em;
+      padding: 0.5em 1em;
+      font-size: 1em;
       background-color: #8e44ad;
       color: white;
       border: none;
-      border-radius: 6px;
+      border-radius: 5px;
       cursor: pointer;
+      margin-left: 1em;
     }
     .result {
       text-align: center;
       margin-top: 2em;
-      font-size: 1.3em;
+      font-size: 1.2em;
     }
   </style>
 </head>
 <body>
   <h1>Welcome to Our Wedding 🌸</h1>
   <div class="seat-form">
-    <p>Type your name to find your seat:</p>
-    <input type="text" id="guestName" list="guestNames" placeholder="e.g., Gard" />
-    <datalist id="guestNames"></datalist>
-    <br />
+    <p>Select your name to find your seat:</p>
+    <select id="guestSelect" placeholder="Start typing your name"></select>
     <button onclick="findSeat()">Find My Seat</button>
   </div>
   <div class="result" id="seatResult"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
   <script>
     const seatAssignments = {};
-    const endpoint = "https://script.googleusercontent.com/macros/echo?user_content_key=AehSKLiQncBCsf2hivJDIUYR8NVa65h3C7nt-688LyxHuDpTWhFjetRm5e27iLd6As8Xtahfx999hi4eiJdnxBWlnfnYHVaiYcobVWG2nr-gnYhEmB7ZCRHCqZH4EyNj7NG1Bc0J9DSP3FfobNllhfA5zoWK4zMVrJ5wyIMhFWTxY9GMWpOeHBq-DzQhLQUSUkcodymAUiVbasJmd0A0kqhIdmsUU4MzzCgC5xPDU1dvQsWAnbX5Mtm3Wqt3a64-z3e-wrkaIQKl1ocNboco-rYNB9wJYnenhQ&lib=MUvtHYt_sFLHhwKtHHYVligsXw-1pD1hx";
+    const endpoint = "https://script.google.com/macros/s/AKfycbwJApoHQRMqqsb_SlKXivgIo8iFGZ-3ZBnV74ZExEjwIwlNFw6cEgtWKXIbksnuZ0kw/exec";
+
+    const choices = new Choices('#guestSelect', {
+      searchEnabled: true,
+      itemSelectText: '',
+      shouldSort: true,
+      placeholder: true
+    });
 
     fetch(endpoint)
       .then(res => res.json())
       .then(data => {
-        const datalist = document.getElementById("guestNames");
+        const guestOptions = [];
         data.forEach(row => {
-          const name = row.Name?.trim();
+          const name = row.Name?.toString().trim();
           const seat = row.Seat?.toString().trim();
           if (name && seat) {
-            seatAssignments[name] = seat;
-            const option = document.createElement("option");
-            option.value = name;
-            datalist.appendChild(option);
+            const parts = seat?.split("-");
+            const formattedSeat = (parts && parts.length === 2)
+            ? `Table ${parts[0].trim()}, Seat ${parts[1].trim()}`
+            : seat;
+            seatAssignments[name] = formattedSeat;
+            guestOptions.push({ value: name, label: name });
           }
         });
+        choices.setChoices(guestOptions, 'value', 'label', true);
+      })
+      .catch(err => {
+        document.getElementById("seatResult").textContent = "Error loading guest list.";
+        console.error("Fetch error:", err);
       });
 
     function findSeat() {
-      const inputName = document.getElementById("guestName").value.trim().toLowerCase();
-      let matchedSeat = null;
-
-      for (const name in seatAssignments) {
-        if (name.toLowerCase() === inputName) {
-          matchedSeat = seatAssignments[name];
-          break;
-        }
-      }
-
-      document.getElementById("seatResult").textContent = matchedSeat || 
-        "Seat not found. Please check spelling or ask staff for help 💐";
+      const selectedName = document.querySelector("#guestSelect").value.trim();
+      const seat = seatAssignments[selectedName] || "Seat not found. Please check spelling or contact event staff.";
+      document.getElementById("seatResult").textContent = seat;
     }
   </script>
 </body>
